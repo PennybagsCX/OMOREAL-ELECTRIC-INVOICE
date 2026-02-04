@@ -88,36 +88,38 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  label={renderLabel}
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value?: number, name?: string, props?: any) => [
-                    `${value || 0} invoices`,
-                    `$${(props?.payload?.amount || 0).toFixed(2)}`,
-                  ]}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="space-y-4">
+            <div style={{ height: '250px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    label={renderLabel}
+                    labelLine={false}
+                    outerRadius={90}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value?: number, name?: string, props?: any) => [
+                      `${value || 0} invoices`,
+                      `$${(props?.payload?.amount || 0).toFixed(2)}`,
+                    ]}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
             <CustomLegend data={chartData} />
           </div>
         )}
