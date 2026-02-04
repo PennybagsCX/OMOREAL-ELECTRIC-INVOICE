@@ -25,26 +25,42 @@ export function RevenueChart({ data, months = 12 }: RevenueChartProps) {
       </CardHeader>
       <CardContent>
         {!hasData ? (
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            No revenue data available
+          <div className="h-[300px] flex flex-col items-center justify-center text-center gap-3 text-muted-foreground">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium">No revenue data available</p>
+              <p className="text-sm">Record payments to see revenue trends</p>
+            </div>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11 }}
                 interval={0}
                 angle={-45}
                 textAnchor="end"
                 height={60}
+                className="text-muted-foreground"
               />
-              <YAxis tick={{ fontSize: 12 }} />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                className="text-muted-foreground"
+                tickFormatter={(value) => `$${value}`}
+              />
               <Tooltip
                 formatter={(value?: number) => [`$${(value || 0).toFixed(2)}`, 'Revenue']}
-                labelStyle={{ color: '#000' }}
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                }}
               />
               <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             </BarChart>
