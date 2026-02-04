@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
 
 const COLORS = {
   draft: '#94a3b8',
@@ -22,51 +22,7 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
       name: status.charAt(0).toUpperCase() + status.slice(1),
       value: value.count,
       amount: value.amount,
-      color: COLORS[status.toLowerCase() as keyof typeof COLORS] || '#8884d8',
     }))
-
-  // Custom label renderer with better text positioning
-  const renderLabel = (props: any) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props
-    if (percent === 0 || percent < 0.05) return null
-
-    const RADIAN = Math.PI / 180
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
-    const x = cx + radius * Math.cos(-midAngle * RADIAN)
-    const y = cy + radius * Math.sin(-midAngle * RADIAN)
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#fff"
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={11}
-        fontWeight={600}
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    )
-  }
-
-  // Custom legend component with better layout
-  const CustomLegend = ({ data }: { data: typeof chartData }) => {
-    return (
-      <div className="flex flex-wrap justify-center gap-3 mt-4">
-        {data.map((entry, index) => (
-          <div key={`legend-${index}`} className="flex items-center gap-1.5 text-xs">
-            <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="font-medium">{entry.name}</span>
-            <span className="text-muted-foreground">({entry.value})</span>
-          </div>
-        ))}
-      </div>
-    )
-  }
 
   return (
     <Card>
@@ -88,39 +44,45 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div style={{ height: '250px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    label={renderLabel}
-                    labelLine={false}
-                    outerRadius={90}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value?: number, name?: string, props?: any) => [
-                      `${value || 0} invoices`,
-                      `$${(props?.payload?.amount || 0).toFixed(2)}`,
-                    ]}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <CustomLegend data={chartData} />
+          <div className="w-full">
+            <PieChart width={400} height={300} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <Pie
+                data={chartData}
+                cx={200}
+                cy={130}
+                labelLine={false}
+                label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                nameKey="name"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS] || '#8884d8'} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value?: number, name?: string, props?: any) => [
+                  `${value || 0} invoices`,
+                  `$${(props?.payload?.amount || 0).toFixed(2)}`,
+                ]}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                height={36}
+                iconType="circle"
+                formatter={(value, entry: any) => (
+                  <span style={{ color: entry.color }}>
+                    {value} ({entry.payload?.value || 0})
+                  </span>
+                )}
+              />
+            </PieChart>
           </div>
         )}
       </CardContent>
