@@ -63,14 +63,14 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={chartData}
                 cx="50%"
-                cy="50%"
+                cy="45%"
                 label={renderLabel}
                 labelLine={false}
-                outerRadius={80}
+                outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -84,7 +84,13 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
                   `$${(props?.payload?.amount || 0).toFixed(2)}`,
                 ]}
               />
-              <Legend />
+              <Legend
+                verticalAlign="bottom"
+                align="center"
+                layout="horizontal"
+                wrapperStyle={{ paddingTop: '10px' }}
+                iconType="circle"
+              />
             </PieChart>
           </ResponsiveContainer>
         )}
