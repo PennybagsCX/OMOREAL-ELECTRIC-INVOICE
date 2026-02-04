@@ -68,26 +68,26 @@ export default async function EstimateDetailPage({
               <SaveAsTemplateButton id={estimate.id} type="estimate" />
               <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-none text-foreground">
                 <Link href={`/dashboard/estimates/${estimate.id}/edit`}>
-                  <Edit className="h-4 w-4 mr-2 sm:inline hidden" />
-                  <span className="hidden sm:inline">Edit</span>
+                  <Edit className="h-4 w-4 mr-2" />
+                  <span>Edit</span>
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-none text-foreground">
                 <Link href={`/api/pdf/estimate/${estimate.id}`} target="_blank">
-                  <Download className="h-4 w-4 mr-2 sm:inline hidden" />
-                  <span className="hidden sm:inline">PDF</span>
+                  <Download className="h-4 w-4 mr-2" />
+                  <span>PDF</span>
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-none text-foreground">
                 <Link href={`/api/estimates/${estimate.id}/calendar`} download>
-                  <Calendar className="h-4 w-4 mr-2 sm:inline hidden" />
-                  <span className="hidden sm:inline">Calendar</span>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>Calendar</span>
                 </Link>
               </Button>
               <form action={deleteEstimateAndRevalidate} className="flex-1 sm:flex-none">
                 <input type="hidden" name="id" value={estimate.id} />
                 <Button variant="destructive" size="sm" type="submit" className="w-full sm:w-auto">
-                  <Trash2 className="h-4 w-4 mr-2 hidden sm:inline" />
+                  <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
               </form>

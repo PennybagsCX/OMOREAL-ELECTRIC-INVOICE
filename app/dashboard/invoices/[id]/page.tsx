@@ -237,14 +237,14 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               </Button>
               <Button asChild variant="outline" className="w-full sm:w-auto text-foreground">
                 <Link href={`/api/pdf/invoice/${invoice.id}`} target="_blank">
-                  <Download className="h-4 w-4 mr-2 sm:inline hidden" />
-                  <span className="hidden sm:inline">PDF</span>
+                  <Download className="h-4 w-4 mr-2" />
+                  <span>PDF</span>
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full sm:w-auto text-foreground">
                 <Link href={`/api/invoices/${invoice.id}/calendar`} download>
-                  <Calendar className="h-4 w-4 mr-2 sm:inline hidden" />
-                  <span className="hidden sm:inline">Add to Calendar</span>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>Add to Calendar</span>
                 </Link>
               </Button>
               <Button asChild variant="default" className="w-full sm:w-auto">
