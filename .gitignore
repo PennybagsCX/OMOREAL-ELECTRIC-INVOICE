@@ -38,7 +38,6 @@ next-env.d.ts
 # Development tools
 .ck/
 .context/
-hooks/
 
 # Test and setup scripts
 *.sh
