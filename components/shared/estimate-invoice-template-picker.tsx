@@ -113,9 +113,9 @@ export function EstimateInvoiceTemplatePicker({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" className="w-full justify-start text-left overflow-hidden">
+        <Button type="button" variant="outline" className="w-full justify-start text-left">
           <FileText className="mr-2 h-4 w-4 shrink-0" />
-          <span className="truncate">{search || `Load ${templateType} template`}</span>
+          <span className="truncate min-w-0">{search || `Load ${templateType} template`}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="w-full max-w-md p-0 max-h-[70vh]">
