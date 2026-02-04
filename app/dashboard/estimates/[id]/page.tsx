@@ -2,7 +2,6 @@ import { getEstimate } from '@/actions/estimates'
 import {
   deleteEstimateAndRevalidate,
   updateEstimateStatusAndRevalidate,
-  generateEstimateTokenAndRevalidate,
   convertEstimateToInvoiceWithRedirect,
 } from '@/actions/estimates'
 import { Button } from '@/components/ui/button'
@@ -10,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Edit, Trash2, Download, Calendar } from 'lucide-react'
 import Link from 'next/link'
-import { ShareButton } from '@/components/estimates/share-button'
 import { SaveAsTemplateButton } from '@/components/shared/save-as-template-button'
 
 const statusColors: Record<string, string> = {
@@ -176,16 +174,6 @@ export default async function EstimateDetailPage({
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{estimate.notes}</p>
             </div>
           )}
-
-          {/* Share */}
-          <div className="border-t pt-4">
-            <h3 className="font-semibold mb-3">Share</h3>
-            <ShareButton
-              estimateId={estimate.id}
-              publicToken={estimate.public_token}
-              onGenerate={generateEstimateTokenAndRevalidate}
-            />
-          </div>
 
           {/* Status Actions */}
           <div className="border-t pt-4">
