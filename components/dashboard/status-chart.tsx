@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { useEffect, useState } from 'react'
 
 const COLORS = {
   draft: '#94a3b8',
@@ -17,8 +16,6 @@ interface InvoiceStatusChartProps {
 }
 
 export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
-  const [isClient, setIsClient] = useState(false)
-
   const chartData = Object.entries(breakdown)
     .filter(([_, value]: [string, any]) => value.count > 0)
     .map(([status, value]: [string, any]) => ({
@@ -26,10 +23,6 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
       value: value.count,
       amount: value.amount,
     }))
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   return (
     <Card>
@@ -51,49 +44,55 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center w-full py-4">
-            {isClient && (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS] || '#8884d8'} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value?: number, name?: string, props?: any) => [
-                      `${value || 0} invoices`,
-                      `$${(props?.payload?.amount || 0).toFixed(2)}`,
-                    ]}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    formatter={(value, entry: any) => (
-                      <span style={{ color: entry.color }}>
-                        {value} ({entry.payload?.value || 0})
+          <div className="w-full" style={{ minHeight: '350px' }}>
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="45%"
+                  outerRadius={90}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }: any) => {
+                    const pct = (percent || 0) * 100
+                    return pct > 5 ? `${name}: ${pct.toFixed(0)}%` : ''
+                  }}
+                  labelLine={false}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS] || '#8884d8'} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value?: number, name?: string, props?: any) => [
+                    `${value || 0} invoices`,
+                    `$${(props?.payload?.amount || 0).toFixed(2)}`,
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                  }}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  align="center"
+                  layout="horizontal"
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: '12px' }}
+                  formatter={(value: string, entry: any) => (
+                    <span style={{ color: entry.color, marginRight: '4px' }}>
+                      {value}
+                      <span style={{ color: 'hsl(var(--muted-foreground))', marginLeft: '4px' }}>
+                        ({entry.payload?.value || 0})
                       </span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         )}
       </CardContent>
