@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,6 +38,8 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   const [dueDate, setDueDate] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [isInitialized, setIsInitialized] = useState(false)
+  const autoSelectCompletedRef = useRef(false)
+  const autoSelectTimestampRef = useRef(0)
 
   // Wrap setSelectedClientId to track all calls
   const setSelectedClientIdWithLogging = useCallback((value: string | ((prev: string) => string)) => {
@@ -69,8 +71,14 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
       console.log('✓ Invoice Client exists check:', { clientExists, preselectedClientId, clientIds: clients.map(c => c.id) })
       if (clientExists) {
         console.log('✅ Setting invoice selectedClientId:', preselectedClientId)
+        autoSelectCompletedRef.current = true
+        autoSelectTimestampRef.current = Date.now()
         setSelectedClientIdWithLogging(preselectedClientId)
-        setTimeout(() => setIsInitialized(true), 0)
+        // Mark as initialized after a short delay to allow Select to stabilize
+        setTimeout(() => {
+          setIsInitialized(true)
+          autoSelectCompletedRef.current = false
+        }, 100)
       } else {
         console.log('❌ Invoice Client not found in list')
         setIsInitialized(true)
@@ -180,12 +188,25 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
               <Select
                 value={selectedClientId}
                 onValueChange={(value) => {
-                  console.log('🎯 Invoice Select onValueChange called:', { value, isInitialized })
-                  if (isInitialized) {
-                    setSelectedClientIdWithLogging(value)
-                  } else {
-                    console.log('⏸️ Ignoring invoice onValueChange - not initialized yet')
+                  const timeSinceAutoSelect = Date.now() - autoSelectTimestampRef.current
+                  const justCompletedAutoSelect = autoSelectCompletedRef.current && timeSinceAutoSelect < 100
+
+                  console.log('🎯 Invoice Select onValueChange called:', {
+                    value,
+                    isInitialized,
+                    justCompletedAutoSelect,
+                    timeSinceAutoSelect
+                  })
+
+                  // Block if: not initialized OR (just completed auto-select AND value is empty)
+                  if (!isInitialized || (justCompletedAutoSelect && value === '')) {
+                    console.log('⏸️ Ignoring invoice onValueChange:', {
+                      reason: !isInitialized ? 'not initialized' : 'just completed auto-select with empty value'
+                    })
+                    return
                   }
+
+                  setSelectedClientIdWithLogging(value)
                 }}
                 required
               >

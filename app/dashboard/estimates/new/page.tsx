@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,8 @@ export default function NewEstimatePage() {
   const [notes, setNotes] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [isInitialized, setIsInitialized] = useState(false)
+  const autoSelectCompletedRef = useRef(false)
+  const autoSelectTimestampRef = useRef(0)
 
   // Wrap setSelectedClientId to track all calls
   const setSelectedClientIdWithLogging = useCallback((value: string | ((prev: string) => string)) => {
@@ -78,9 +80,14 @@ export default function NewEstimatePage() {
       // Set preselected client from URL param if valid
       if (preselectedClientId && clientList.some((c: Client) => c.id === preselectedClientId)) {
         console.log('✅ Setting estimate selectedClientId:', preselectedClientId)
+        autoSelectCompletedRef.current = true
+        autoSelectTimestampRef.current = Date.now()
         setSelectedClientIdWithLogging(preselectedClientId)
-        // Mark as initialized after auto-select
-        setTimeout(() => setIsInitialized(true), 0)
+        // Mark as initialized after a short delay to allow Select to stabilize
+        setTimeout(() => {
+          setIsInitialized(true)
+          autoSelectCompletedRef.current = false
+        }, 100)
       } else {
         console.log('❌ Estimate client not found or no preselectedClientId')
         setIsInitialized(true)
@@ -181,12 +188,25 @@ export default function NewEstimatePage() {
                 <Select
                   value={selectedClientId}
                   onValueChange={(value) => {
-                    console.log('🎯 Select onValueChange called:', { value, isInitialized })
-                    if (isInitialized) {
-                      setSelectedClientIdWithLogging(value)
-                    } else {
-                      console.log('⏸️ Ignoring onValueChange - not initialized yet')
+                    const timeSinceAutoSelect = Date.now() - autoSelectTimestampRef.current
+                    const justCompletedAutoSelect = autoSelectCompletedRef.current && timeSinceAutoSelect < 100
+
+                    console.log('🎯 Select onValueChange called:', {
+                      value,
+                      isInitialized,
+                      justCompletedAutoSelect,
+                      timeSinceAutoSelect
+                    })
+
+                    // Block if: not initialized OR (just completed auto-select AND value is empty)
+                    if (!isInitialized || (justCompletedAutoSelect && value === '')) {
+                      console.log('⏸️ Ignoring onValueChange:', {
+                        reason: !isInitialized ? 'not initialized' : 'just completed auto-select with empty value'
+                      })
+                      return
                     }
+
+                    setSelectedClientIdWithLogging(value)
                   }}
                   required
                 >
