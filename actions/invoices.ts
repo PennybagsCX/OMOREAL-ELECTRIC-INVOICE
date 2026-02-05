@@ -47,8 +47,8 @@ export async function getClientInvoices(clientId: string) {
     .eq('client_id', clientId)
     .order('issue_date', { ascending: false })
 
-  if (error) throw error
-  return data
+  if (error) return []
+  return data || []
 }
 
 export async function createInvoice(formData: FormData) {
