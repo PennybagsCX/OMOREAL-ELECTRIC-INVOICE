@@ -38,6 +38,19 @@ export async function getInvoice(id: string) {
   return data
 }
 
+export async function getClientInvoices(clientId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('issue_date', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
 export async function createInvoice(formData: FormData) {
   const supabase = await createClient()
 

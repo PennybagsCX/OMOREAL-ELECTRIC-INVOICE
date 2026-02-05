@@ -40,6 +40,19 @@ export async function getEstimate(id: string) {
   return data
 }
 
+export async function getClientEstimates(clientId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('estimates')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('issue_date', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
 export async function createEstimate(formData: FormData) {
   const supabase = await createClient()
 
