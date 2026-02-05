@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 
 const COLORS = {
   draft: '#94a3b8',
@@ -49,51 +49,49 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
         ) : (
           <div className="flex flex-col items-center gap-4">
             {/* Pie Chart */}
-            <div className="w-full" style={{ height: '250px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }: any) => {
-                      const pct = (percent || 0) * 100
-                      return pct > 8 ? `${name} ${pct.toFixed(0)}%` : ''
-                    }}
-                    labelLine={false}
-                    fontSize={11}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value?: number, name?: string, props?: any) => [
-                      `${value || 0} invoices`,
-                      `$${(props?.payload?.amount || 0).toFixed(2)}`,
-                    ]}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="w-full flex justify-center">
+              <PieChart width={280} height={220}>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={70}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }: any) => {
+                    const pct = (percent || 0) * 100
+                    return pct > 10 ? `${pct.toFixed(0)}%` : ''
+                  }}
+                  labelLine={false}
+                  fontSize={10}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value?: number, name?: string, props?: any) => [
+                    `${value || 0} invoices`,
+                    `$${(props?.payload?.amount || 0).toFixed(2)}`,
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                  }}
+                />
+              </PieChart>
             </div>
 
             {/* Custom Legend */}
-            <div className="flex flex-wrap justify-center gap-3 w-full">
+            <div className="flex flex-wrap justify-center gap-2 w-full">
               {chartData.map((entry) => {
-                const percent = ((entry.value / total) * 100).toFixed(1)
+                const percent = ((entry.value / total) * 100).toFixed(0)
                 return (
-                  <div key={entry.name} className="flex items-center gap-1.5 text-xs">
+                  <div key={entry.name} className="flex items-center gap-1 text-xs">
                     <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: entry.color }}
                     />
                     <span className="font-medium">{entry.name}</span>
