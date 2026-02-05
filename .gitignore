@@ -54,3 +54,4 @@ MOBILE*.md
 Screenshot*.png
 # Development documentation (keep README.md)
 # .claude/
+.context

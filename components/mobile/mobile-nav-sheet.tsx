@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Settings,
   Layers,
+  LogOut,
 } from 'lucide-react'
 
 const allNavigation = [
@@ -61,6 +62,16 @@ export function MobileNavSheet({ open, onOpenChange }: { open: boolean; onOpenCh
               </button>
             )
           })}
+          <div className="border-t my-2" />
+          <form action="/api/auth/logout" method="POST" className="w-full">
+            <button
+              type="submit"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Sign Out</span>
+            </button>
+          </form>
         </div>
       </SheetContent>
     </Sheet>

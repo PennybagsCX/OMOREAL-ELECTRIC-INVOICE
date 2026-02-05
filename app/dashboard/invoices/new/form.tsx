@@ -41,13 +41,20 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
 
   // Set preselected client from prop - run on mount and when clients/preselectedClientId changes
   useEffect(() => {
+    console.log('🔍 Auto-select Debug:', { preselectedClientId, clientsCount: clients?.length, clients })
     // Only auto-select if we have both a preselected ID AND clients loaded
     if (preselectedClientId && clients && clients.length > 0) {
       // Check if the client exists in the list
       const clientExists = clients.some(c => c.id === preselectedClientId)
+      console.log('✓ Client exists check:', { clientExists, preselectedClientId, clientIds: clients.map(c => c.id) })
       if (clientExists) {
+        console.log('✅ Setting selectedClientId:', preselectedClientId)
         setSelectedClientId(preselectedClientId)
+      } else {
+        console.log('❌ Client not found in list')
       }
+    } else {
+      console.log('⏸️ Skipping auto-select:', { hasPreselected: !!preselectedClientId, hasClients: !!clients, clientsCount: clients?.length })
     }
   }, [preselectedClientId, clients])
 

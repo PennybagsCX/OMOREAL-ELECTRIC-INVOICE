@@ -42,12 +42,26 @@ export default function NewEstimatePage() {
     const urlParams = new URLSearchParams(window.location.search)
     const preselectedClientId = urlParams.get('client_id')
 
+    console.log('🔍 Estimate Auto-select Debug:', {
+      urlSearchParams: window.location.search,
+      preselectedClientId,
+      url: window.location.href
+    })
+
     // Load clients
     getClients().then((clientList) => {
+      console.log('✓ Estimate Clients loaded:', {
+        clientsCount: clientList?.length,
+        clientIds: clientList?.map((c: Client) => ({ id: c.id, name: c.name })),
+        preselectedClientId
+      })
       setClients(clientList)
       // Set preselected client from URL param if valid
       if (preselectedClientId && clientList.some((c: Client) => c.id === preselectedClientId)) {
+        console.log('✅ Setting estimate selectedClientId:', preselectedClientId)
         setSelectedClientId(preselectedClientId)
+      } else {
+        console.log('❌ Estimate client not found or no preselectedClientId')
       }
     }).catch(console.error)
   }, [])
