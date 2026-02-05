@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,22 +40,9 @@ export default function NewEstimatePage() {
   const autoSelectCompletedRef = useRef(false)
   const autoSelectTimestampRef = useRef(0)
 
-  // Wrap setSelectedClientId to track all calls
-  const setSelectedClientIdWithLogging = useCallback((value: string | ((prev: string) => string)) => {
-    const caller = new Error().stack?.split('\n')[2]?.trim()
-    console.log('📞 setSelectedClientId called:', { value, caller })
-    setSelectedClientId(value)
-  }, [])
-
-  // Debug: log whenever selectedClientId changes
-  useEffect(() => {
-    console.log('🔄 selectedClientId state changed:', selectedClientId)
-  }, [selectedClientId])
-
   useEffect(() => {
     // Prevent multiple executions
     if (isInitialized) {
-      console.log('⏭️ Skipping useEffect - already initialized')
       return
     }
 
@@ -63,33 +50,20 @@ export default function NewEstimatePage() {
     const urlParams = new URLSearchParams(window.location.search)
     const preselectedClientId = urlParams.get('client_id')
 
-    console.log('🔍 Estimate Auto-select Debug:', {
-      urlSearchParams: window.location.search,
-      preselectedClientId,
-      url: window.location.href
-    })
-
     // Load clients
     getClients().then((clientList) => {
-      console.log('✓ Estimate Clients loaded:', {
-        clientsCount: clientList?.length,
-        clientIds: clientList?.map((c: Client) => ({ id: c.id, name: c.name })),
-        preselectedClientId
-      })
       setClients(clientList)
       // Set preselected client from URL param if valid
       if (preselectedClientId && clientList.some((c: Client) => c.id === preselectedClientId)) {
-        console.log('✅ Setting estimate selectedClientId:', preselectedClientId)
         autoSelectCompletedRef.current = true
         autoSelectTimestampRef.current = Date.now()
-        setSelectedClientIdWithLogging(preselectedClientId)
+        setSelectedClientId(preselectedClientId)
         // Mark as initialized after a short delay to allow Select to stabilize
         setTimeout(() => {
           setIsInitialized(true)
           autoSelectCompletedRef.current = false
         }, 100)
       } else {
-        console.log('❌ Estimate client not found or no preselectedClientId')
         setIsInitialized(true)
       }
     }).catch(console.error)
@@ -181,32 +155,18 @@ export default function NewEstimatePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="client_id">Client *</Label>
-                {/* Debug display - remove after fixing */}
-                <div className="text-xs text-muted-foreground" style={{fontFamily: 'monospace'}}>
-                  Debug: selected = {selectedClientId ? selectedClientId.slice(0, 8) + '...' : '(empty)'}
-                </div>
                 <Select
                   value={selectedClientId}
                   onValueChange={(value) => {
                     const timeSinceAutoSelect = Date.now() - autoSelectTimestampRef.current
                     const justCompletedAutoSelect = autoSelectCompletedRef.current && timeSinceAutoSelect < 100
 
-                    console.log('🎯 Select onValueChange called:', {
-                      value,
-                      isInitialized,
-                      justCompletedAutoSelect,
-                      timeSinceAutoSelect
-                    })
-
                     // Block if: not initialized OR (just completed auto-select AND value is empty)
                     if (!isInitialized || (justCompletedAutoSelect && value === '')) {
-                      console.log('⏸️ Ignoring onValueChange:', {
-                        reason: !isInitialized ? 'not initialized' : 'just completed auto-select with empty value'
-                      })
                       return
                     }
 
-                    setSelectedClientIdWithLogging(value)
+                    setSelectedClientId(value)
                   }}
                   required
                 >

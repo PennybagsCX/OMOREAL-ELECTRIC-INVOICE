@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,50 +41,32 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   const autoSelectCompletedRef = useRef(false)
   const autoSelectTimestampRef = useRef(0)
 
-  // Wrap setSelectedClientId to track all calls
-  const setSelectedClientIdWithLogging = useCallback((value: string | ((prev: string) => string)) => {
-    const caller = new Error().stack?.split('\n')[2]?.trim()
-    console.log('📞 Invoice setSelectedClientId called:', { value, caller })
-    setSelectedClientId(value)
-  }, [setSelectedClientId])
-
-  // Debug: log whenever selectedClientId changes
-  useEffect(() => {
-    console.log('🔄 Invoice selectedClientId state changed:', selectedClientId)
-  }, [selectedClientId])
-
   const DEFAULT_TAX_RATE = 13
 
   // Set preselected client from prop - run on mount and when clients/preselectedClientId changes
   useEffect(() => {
     // Prevent multiple executions
     if (isInitialized) {
-      console.log('⏭️ Invoice: Skipping useEffect - already initialized')
       return
     }
 
-    console.log('🔍 Invoice Auto-select Debug:', { preselectedClientId, clientsCount: clients?.length, clients })
     // Only auto-select if we have both a preselected ID AND clients loaded
     if (preselectedClientId && clients && clients.length > 0) {
       // Check if the client exists in the list
       const clientExists = clients.some(c => c.id === preselectedClientId)
-      console.log('✓ Invoice Client exists check:', { clientExists, preselectedClientId, clientIds: clients.map(c => c.id) })
       if (clientExists) {
-        console.log('✅ Setting invoice selectedClientId:', preselectedClientId)
         autoSelectCompletedRef.current = true
         autoSelectTimestampRef.current = Date.now()
-        setSelectedClientIdWithLogging(preselectedClientId)
+        setSelectedClientId(preselectedClientId)
         // Mark as initialized after a short delay to allow Select to stabilize
         setTimeout(() => {
           setIsInitialized(true)
           autoSelectCompletedRef.current = false
         }, 100)
       } else {
-        console.log('❌ Invoice Client not found in list')
         setIsInitialized(true)
       }
     } else {
-      console.log('⏸️ Skipping invoice auto-select:', { hasPreselected: !!preselectedClientId, hasClients: !!clients, clientsCount: clients?.length })
       if (clients && clients.length > 0) {
         setIsInitialized(true)
       }
@@ -181,32 +163,18 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
             {/* Client Selection */}
             <div className="space-y-2">
               <Label htmlFor="client">Client *</Label>
-              {/* Debug display - remove after fixing */}
-              <div className="text-xs text-muted-foreground" style={{fontFamily: 'monospace'}}>
-                Debug: selected = {selectedClientId ? selectedClientId.slice(0, 8) + '...' : '(empty)'}
-              </div>
               <Select
                 value={selectedClientId}
                 onValueChange={(value) => {
                   const timeSinceAutoSelect = Date.now() - autoSelectTimestampRef.current
                   const justCompletedAutoSelect = autoSelectCompletedRef.current && timeSinceAutoSelect < 100
 
-                  console.log('🎯 Invoice Select onValueChange called:', {
-                    value,
-                    isInitialized,
-                    justCompletedAutoSelect,
-                    timeSinceAutoSelect
-                  })
-
                   // Block if: not initialized OR (just completed auto-select AND value is empty)
                   if (!isInitialized || (justCompletedAutoSelect && value === '')) {
-                    console.log('⏸️ Ignoring invoice onValueChange:', {
-                      reason: !isInitialized ? 'not initialized' : 'just completed auto-select with empty value'
-                    })
                     return
                   }
 
-                  setSelectedClientIdWithLogging(value)
+                  setSelectedClientId(value)
                 }}
                 required
               >
