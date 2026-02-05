@@ -28,7 +28,7 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
   const total = chartData.reduce((sum, item) => sum + item.value, 0)
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Invoice Status</CardTitle>
         <CardDescription>Distribution of invoice statuses</CardDescription>
@@ -47,16 +47,16 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-col items-center gap-4">
             {/* Pie Chart */}
-            <div className="w-full flex justify-center">
-              <ResponsiveContainer width={300} height={300}>
+            <div className="w-full" style={{ height: '250px' }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                     nameKey="name"
@@ -65,6 +65,7 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
                       return pct > 8 ? `${name} ${pct.toFixed(0)}%` : ''
                     }}
                     labelLine={false}
+                    fontSize={11}
                   >
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -86,13 +87,13 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
             </div>
 
             {/* Custom Legend */}
-            <div className="flex flex-wrap justify-center gap-4 pt-2">
+            <div className="flex flex-wrap justify-center gap-3 w-full">
               {chartData.map((entry) => {
                 const percent = ((entry.value / total) * 100).toFixed(1)
                 return (
-                  <div key={entry.name} className="flex items-center gap-2 text-sm">
+                  <div key={entry.name} className="flex items-center gap-1.5 text-xs">
                     <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: entry.color }}
                     />
                     <span className="font-medium">{entry.name}</span>

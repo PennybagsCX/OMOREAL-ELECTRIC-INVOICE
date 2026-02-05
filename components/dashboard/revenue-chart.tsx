@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface RevenueChartProps {
   data: Array<{ month: string; amount: number }>
@@ -18,7 +18,7 @@ export function RevenueChart({ data, months = 12 }: RevenueChartProps) {
   const maxAmount = Math.max(...chartData.map(d => d.amount))
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Revenue Overview</CardTitle>
         <CardDescription>Monthly revenue for the last {months} months</CardDescription>
@@ -37,31 +37,35 @@ export function RevenueChart({ data, months = 12 }: RevenueChartProps) {
             </div>
           </div>
         ) : (
-          <div className="w-full flex justify-center py-4">
-            <BarChart width={500} height={300} data={chartData} margin={{ top: 20, right: 10, bottom: 60, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                interval={0}
-                angle={-45}
-                textAnchor="end"
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                domain={[0, maxAmount * 1.1]}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(1)}k`}
-              />
-              <Tooltip
-                formatter={(value?: number) => [`$${(value || 0).toLocaleString()}`, 'Revenue']}
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px',
-                }}
-              />
-              <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
+          <div className="w-full" style={{ height: '320px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 10, bottom: 60, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  interval={0}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  domain={[0, maxAmount * 1.1]}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(1)}k`}
+                  width={50}
+                />
+                <Tooltip
+                  formatter={(value?: number) => [`$${(value || 0).toLocaleString()}`, 'Revenue']}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                  }}
+                />
+                <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </CardContent>
