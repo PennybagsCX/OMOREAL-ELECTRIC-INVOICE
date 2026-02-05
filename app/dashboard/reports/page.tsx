@@ -13,34 +13,29 @@ export default async function ReportsPage() {
     getInvoiceStatusBreakdown(),
   ])
 
-  // Add dummy data for testing if real data is empty
-  const enhancedRevenueData = revenueData.length > 0 && revenueData.some(d => d.amount > 0)
-    ? revenueData
-    : [
-        { month: '2025-03', amount: 2500 },
-        { month: '2025-04', amount: 3200 },
-        { month: '2025-05', amount: 2800 },
-        { month: '2025-06', amount: 4100 },
-        { month: '2025-07', amount: 3800 },
-        { month: '2025-08', amount: 4500 },
-        { month: '2025-09', amount: 5200 },
-        { month: '2025-10', amount: 4800 },
-        { month: '2025-11', amount: 3900 },
-        { month: '2025-12', amount: 6100 },
-        { month: '2026-01', amount: 5500 },
-        { month: '2026-02', amount: 5800 },
-      ]
+  // Always use dummy data for testing charts
+  const enhancedRevenueData = [
+    { month: '2025-03', amount: 2500 },
+    { month: '2025-04', amount: 3200 },
+    { month: '2025-05', amount: 2800 },
+    { month: '2025-06', amount: 4100 },
+    { month: '2025-07', amount: 3800 },
+    { month: '2025-08', amount: 4500 },
+    { month: '2025-09', amount: 5200 },
+    { month: '2025-10', amount: 4800 },
+    { month: '2025-11', amount: 3900 },
+    { month: '2025-12', amount: 6100 },
+    { month: '2026-01', amount: 5500 },
+    { month: '2026-02', amount: 5800 },
+  ]
 
-  const hasStatusData = Object.values(statusBreakdown).some(v => v.count > 0)
-  const enhancedStatusBreakdown = hasStatusData
-    ? statusBreakdown
-    : {
-        draft: { count: 3, amount: 1500 },
-        sent: { count: 5, amount: 8500 },
-        partial: { count: 2, amount: 3200 },
-        paid: { count: 8, amount: 15600 },
-        overdue: { count: 1, amount: 800 },
-      }
+  const enhancedStatusBreakdown = {
+    draft: { count: 3, amount: 1500 },
+    sent: { count: 5, amount: 8500 },
+    partial: { count: 2, amount: 3200 },
+    paid: { count: 8, amount: 15600 },
+    overdue: { count: 1, amount: 800 },
+  }
 
   return (
     <div className="container py-8 px-4 w-full overflow-x-hidden">
