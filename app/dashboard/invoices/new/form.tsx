@@ -1,8 +1,8 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,14 +28,25 @@ interface Client {
 
 interface NewInvoiceFormProps {
   clients: Client[]
+  preselectedClientId?: string
 }
 
-export default function NewInvoiceForm({ clients }: NewInvoiceFormProps) {
+export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvoiceFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [lineItems, setLineItems] = useState<any[]>([])
   const [notes, setNotes] = useState('')
   const [dueDate, setDueDate] = useState('')
+  const [selectedClientId, setSelectedClientId] = useState<string>('')
   const DEFAULT_TAX_RATE = 13
+
+  // Set preselected client from prop or URL param
+  useEffect(() => {
+    const clientId = preselectedClientId || searchParams.get('client_id')
+    if (clientId && clients.some(c => c.id === clientId)) {
+      setSelectedClientId(clientId)
+    }
+  }, [preselectedClientId, clients, searchParams])
 
   // Handle template selection
   const handleSelectTemplate = (template: any) => {
@@ -54,11 +65,18 @@ export default function NewInvoiceForm({ clients }: NewInvoiceFormProps) {
   }
 
   async function handleSubmit(formData: FormData) {
+    if (!selectedClientId) {
+      toast({ title: 'Error', description: 'Please select a client', variant: 'destructive' })
+      return
+    }
+
     if (lineItems.length === 0 || lineItems.every(item => !item.description)) {
       toast({ title: 'Error', description: 'Please add at least one line item', variant: 'destructive' })
       return
     }
 
+    // Set client_id from state
+    formData.set('client_id', selectedClientId)
     // Set notes from state
     if (notes) {
       formData.set('notes', notes)
@@ -120,7 +138,11 @@ export default function NewInvoiceForm({ clients }: NewInvoiceFormProps) {
             {/* Client Selection */}
             <div className="space-y-2">
               <Label htmlFor="client">Client *</Label>
-              <Select name="client_id" required>
+              <Select
+                value={selectedClientId}
+                onValueChange={setSelectedClientId}
+                required
+              >
                 <SelectTrigger id="client">
                   <SelectValue placeholder="Select a client" />
                 </SelectTrigger>

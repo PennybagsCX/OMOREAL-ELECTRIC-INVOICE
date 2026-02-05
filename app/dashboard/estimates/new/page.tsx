@@ -35,10 +35,21 @@ export default function NewEstimatePage() {
   const [clients, setClients] = useState<Client[]>([])
   const [validUntil, setValidUntil] = useState<Date | undefined>()
   const [notes, setNotes] = useState('')
+  const [selectedClientId, setSelectedClientId] = useState<string>('')
 
   useEffect(() => {
+    // Get client_id from URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const preselectedClientId = urlParams.get('client_id')
+
     // Load clients
-    getClients().then(setClients).catch(console.error)
+    getClients().then((clientList) => {
+      setClients(clientList)
+      // Set preselected client from URL param if valid
+      if (preselectedClientId && clientList.some((c: Client) => c.id === preselectedClientId)) {
+        setSelectedClientId(preselectedClientId)
+      }
+    }).catch(console.error)
   }, [])
 
   // Handle template selection
@@ -59,6 +70,10 @@ export default function NewEstimatePage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!selectedClientId) {
+      toast({ title: 'Error', description: 'Please select a client', variant: 'destructive' })
+      return
+    }
     if (!validUntil) {
       toast({ title: 'Error', description: 'Please select a valid until date', variant: 'destructive' })
       return
@@ -67,8 +82,7 @@ export default function NewEstimatePage() {
     setLoading(true)
     try {
       const formData = new FormData()
-      const form = e.currentTarget
-      formData.append('client_id', (form.querySelector('[name="client_id"]') as HTMLSelectElement)?.value || '')
+      formData.append('client_id', selectedClientId)
       formData.append('valid_until', validUntil.toISOString().split('T')[0])
       formData.append('notes', notes || '')
       formData.append('lineItems', JSON.stringify(lineItems))
@@ -124,7 +138,11 @@ export default function NewEstimatePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="client_id">Client *</Label>
-                <Select name="client_id" required>
+                <Select
+                  value={selectedClientId}
+                  onValueChange={setSelectedClientId}
+                  required
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
