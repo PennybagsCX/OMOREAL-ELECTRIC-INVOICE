@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +36,14 @@ export default function NewEstimatePage() {
   const [validUntil, setValidUntil] = useState<Date | undefined>()
   const [notes, setNotes] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Wrap setSelectedClientId to track all calls
+  const setSelectedClientIdWithLogging = useCallback((value: string | ((prev: string) => string)) => {
+    const caller = new Error().stack?.split('\n')[2]?.trim()
+    console.log('📞 setSelectedClientId called:', { value, caller })
+    setSelectedClientId(value)
+  }, [])
 
   // Debug: log whenever selectedClientId changes
   useEffect(() => {
@@ -43,6 +51,12 @@ export default function NewEstimatePage() {
   }, [selectedClientId])
 
   useEffect(() => {
+    // Prevent multiple executions
+    if (isInitialized) {
+      console.log('⏭️ Skipping useEffect - already initialized')
+      return
+    }
+
     // Get client_id from URL
     const urlParams = new URLSearchParams(window.location.search)
     const preselectedClientId = urlParams.get('client_id')
@@ -64,12 +78,15 @@ export default function NewEstimatePage() {
       // Set preselected client from URL param if valid
       if (preselectedClientId && clientList.some((c: Client) => c.id === preselectedClientId)) {
         console.log('✅ Setting estimate selectedClientId:', preselectedClientId)
-        setSelectedClientId(preselectedClientId)
+        setSelectedClientIdWithLogging(preselectedClientId)
+        // Mark as initialized after auto-select
+        setTimeout(() => setIsInitialized(true), 0)
       } else {
         console.log('❌ Estimate client not found or no preselectedClientId')
+        setIsInitialized(true)
       }
     }).catch(console.error)
-  }, [])
+  }, [isInitialized])
 
   // Handle template selection
   const handleSelectTemplate = (template: any) => {
@@ -163,7 +180,14 @@ export default function NewEstimatePage() {
                 </div>
                 <Select
                   value={selectedClientId}
-                  onValueChange={setSelectedClientId}
+                  onValueChange={(value) => {
+                    console.log('🎯 Select onValueChange called:', { value, isInitialized })
+                    if (isInitialized) {
+                      setSelectedClientIdWithLogging(value)
+                    } else {
+                      console.log('⏸️ Ignoring onValueChange - not initialized yet')
+                    }
+                  }}
                   required
                 >
                   <SelectTrigger>

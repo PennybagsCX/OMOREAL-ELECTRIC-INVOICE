@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,6 +37,14 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   const [notes, setNotes] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Wrap setSelectedClientId to track all calls
+  const setSelectedClientIdWithLogging = useCallback((value: string | ((prev: string) => string)) => {
+    const caller = new Error().stack?.split('\n')[2]?.trim()
+    console.log('📞 Invoice setSelectedClientId called:', { value, caller })
+    setSelectedClientId(value)
+  }, [setSelectedClientId])
 
   // Debug: log whenever selectedClientId changes
   useEffect(() => {
@@ -47,22 +55,33 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
 
   // Set preselected client from prop - run on mount and when clients/preselectedClientId changes
   useEffect(() => {
-    console.log('🔍 Auto-select Debug:', { preselectedClientId, clientsCount: clients?.length, clients })
+    // Prevent multiple executions
+    if (isInitialized) {
+      console.log('⏭️ Invoice: Skipping useEffect - already initialized')
+      return
+    }
+
+    console.log('🔍 Invoice Auto-select Debug:', { preselectedClientId, clientsCount: clients?.length, clients })
     // Only auto-select if we have both a preselected ID AND clients loaded
     if (preselectedClientId && clients && clients.length > 0) {
       // Check if the client exists in the list
       const clientExists = clients.some(c => c.id === preselectedClientId)
-      console.log('✓ Client exists check:', { clientExists, preselectedClientId, clientIds: clients.map(c => c.id) })
+      console.log('✓ Invoice Client exists check:', { clientExists, preselectedClientId, clientIds: clients.map(c => c.id) })
       if (clientExists) {
-        console.log('✅ Setting selectedClientId:', preselectedClientId)
-        setSelectedClientId(preselectedClientId)
+        console.log('✅ Setting invoice selectedClientId:', preselectedClientId)
+        setSelectedClientIdWithLogging(preselectedClientId)
+        setTimeout(() => setIsInitialized(true), 0)
       } else {
-        console.log('❌ Client not found in list')
+        console.log('❌ Invoice Client not found in list')
+        setIsInitialized(true)
       }
     } else {
-      console.log('⏸️ Skipping auto-select:', { hasPreselected: !!preselectedClientId, hasClients: !!clients, clientsCount: clients?.length })
+      console.log('⏸️ Skipping invoice auto-select:', { hasPreselected: !!preselectedClientId, hasClients: !!clients, clientsCount: clients?.length })
+      if (clients && clients.length > 0) {
+        setIsInitialized(true)
+      }
     }
-  }, [preselectedClientId, clients])
+  }, [preselectedClientId, clients, isInitialized])
 
   // Handle template selection
   const handleSelectTemplate = (template: any) => {
@@ -160,7 +179,14 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
               </div>
               <Select
                 value={selectedClientId}
-                onValueChange={setSelectedClientId}
+                onValueChange={(value) => {
+                  console.log('🎯 Invoice Select onValueChange called:', { value, isInitialized })
+                  if (isInitialized) {
+                    setSelectedClientIdWithLogging(value)
+                  } else {
+                    console.log('⏸️ Ignoring invoice onValueChange - not initialized yet')
+                  }
+                }}
                 required
               >
                 <SelectTrigger id="client">
