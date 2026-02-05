@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -33,20 +33,18 @@ interface NewInvoiceFormProps {
 
 export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvoiceFormProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [lineItems, setLineItems] = useState<any[]>([])
   const [notes, setNotes] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const DEFAULT_TAX_RATE = 13
 
-  // Set preselected client from prop or URL param
+  // Set preselected client from prop
   useEffect(() => {
-    const clientId = preselectedClientId || searchParams.get('client_id')
-    if (clientId && clients.some(c => c.id === clientId)) {
-      setSelectedClientId(clientId)
+    if (preselectedClientId && clients.some(c => c.id === preselectedClientId)) {
+      setSelectedClientId(preselectedClientId)
     }
-  }, [preselectedClientId, clients, searchParams])
+  }, [preselectedClientId, clients])
 
   // Handle template selection
   const handleSelectTemplate = (template: any) => {
