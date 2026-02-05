@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -133,7 +134,7 @@ export default function NewInvoiceForm({ clients }: NewInvoiceFormProps) {
               </Select>
               {clients?.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No clients found. <a href="/dashboard/clients/new" className="text-primary hover:underline">Create one first</a>.
+                  No clients found. <Link href="/dashboard/clients/new" className="text-primary hover:underline">Create one first</Link>.
                 </p>
               )}
             </div>
