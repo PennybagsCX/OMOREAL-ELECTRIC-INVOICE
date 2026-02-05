@@ -37,6 +37,12 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   const [notes, setNotes] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
+
+  // Debug: log whenever selectedClientId changes
+  useEffect(() => {
+    console.log('🔄 Invoice selectedClientId state changed:', selectedClientId)
+  }, [selectedClientId])
+
   const DEFAULT_TAX_RATE = 13
 
   // Set preselected client from prop - run on mount and when clients/preselectedClientId changes
@@ -148,6 +154,10 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
             {/* Client Selection */}
             <div className="space-y-2">
               <Label htmlFor="client">Client *</Label>
+              {/* Debug display - remove after fixing */}
+              <div className="text-xs text-muted-foreground" style={{fontFamily: 'monospace'}}>
+                Debug: selected = {selectedClientId ? selectedClientId.slice(0, 8) + '...' : '(empty)'}
+              </div>
               <Select
                 value={selectedClientId}
                 onValueChange={setSelectedClientId}

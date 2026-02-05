@@ -37,6 +37,11 @@ export default function NewEstimatePage() {
   const [notes, setNotes] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
 
+  // Debug: log whenever selectedClientId changes
+  useEffect(() => {
+    console.log('🔄 selectedClientId state changed:', selectedClientId)
+  }, [selectedClientId])
+
   useEffect(() => {
     // Get client_id from URL
     const urlParams = new URLSearchParams(window.location.search)
@@ -152,6 +157,10 @@ export default function NewEstimatePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="client_id">Client *</Label>
+                {/* Debug display - remove after fixing */}
+                <div className="text-xs text-muted-foreground" style={{fontFamily: 'monospace'}}>
+                  Debug: selected = {selectedClientId ? selectedClientId.slice(0, 8) + '...' : '(empty)'}
+                </div>
                 <Select
                   value={selectedClientId}
                   onValueChange={setSelectedClientId}
