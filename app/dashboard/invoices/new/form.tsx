@@ -39,10 +39,15 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const DEFAULT_TAX_RATE = 13
 
-  // Set preselected client from prop
+  // Set preselected client from prop - run on mount and when clients/preselectedClientId changes
   useEffect(() => {
-    if (preselectedClientId && clients.some(c => c.id === preselectedClientId)) {
-      setSelectedClientId(preselectedClientId)
+    // Only auto-select if we have both a preselected ID AND clients loaded
+    if (preselectedClientId && clients && clients.length > 0) {
+      // Check if the client exists in the list
+      const clientExists = clients.some(c => c.id === preselectedClientId)
+      if (clientExists) {
+        setSelectedClientId(preselectedClientId)
+      }
     }
   }, [preselectedClientId, clients])
 
