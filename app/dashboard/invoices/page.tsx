@@ -16,12 +16,29 @@ const statusColors: Record<string, string> = {
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/invoices')
-      .then(res => res.json())
-      .then(data => setInvoices(data))
-      .catch(() => setInvoices([]))
+    fetch('/api/invoices', { credentials: 'include' })
+      .then(async res => {
+        if (!res.ok) {
+          if (res.status === 401) {
+            // Unauthorized - redirect to login
+            window.location.href = '/login'
+            return []
+          }
+          throw new Error('Failed to fetch invoices')
+        }
+        return res.json()
+      })
+      .then(data => {
+        setInvoices(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setInvoices([])
+        setLoading(false)
+      })
   }, [])
 
   const columns = [

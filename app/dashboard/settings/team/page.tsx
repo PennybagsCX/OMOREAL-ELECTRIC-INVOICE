@@ -27,10 +27,16 @@ export default function TeamPage() {
       const res = await fetch('/api/team/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, role }),
       })
 
-      if (!res.ok) throw new Error('Failed to send invite')
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('You must be logged in to invite team members')
+        }
+        throw new Error('Failed to send invite')
+      }
 
       toast({ title: 'Success', description: 'Invitation sent!' })
       setEmail('')

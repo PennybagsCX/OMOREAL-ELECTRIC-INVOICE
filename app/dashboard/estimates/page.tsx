@@ -17,12 +17,29 @@ const statusColors: Record<string, string> = {
 
 export default function EstimatesPage() {
   const [estimates, setEstimates] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/estimates')
-      .then(res => res.json())
-      .then(data => setEstimates(data))
-      .catch(() => setEstimates([]))
+    fetch('/api/estimates', { credentials: 'include' })
+      .then(async res => {
+        if (!res.ok) {
+          if (res.status === 401) {
+            // Unauthorized - redirect to login
+            window.location.href = '/login'
+            return []
+          }
+          throw new Error('Failed to fetch estimates')
+        }
+        return res.json()
+      })
+      .then(data => {
+        setEstimates(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setEstimates([])
+        setLoading(false)
+      })
   }, [])
 
   const columns = [

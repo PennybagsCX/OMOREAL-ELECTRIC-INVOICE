@@ -9,9 +9,18 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([])
 
   useEffect(() => {
-    fetch('/api/clients')
-      .then(res => res.json())
-      .then(data => setClients(data))
+    fetch('/api/clients', { credentials: 'include' })
+      .then(async res => {
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = '/login'
+            return []
+          }
+          throw new Error('Failed to fetch clients')
+        }
+        return res.json()
+      })
+      .then(data => setClients(Array.isArray(data) ? data : []))
       .catch(() => setClients([]))
   }, [])
 

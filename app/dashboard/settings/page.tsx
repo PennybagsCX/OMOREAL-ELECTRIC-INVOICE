@@ -89,6 +89,7 @@ export default function SettingsPage() {
 
       const response = await fetch('/api/upload', {
         method: 'POST',
+        credentials: 'include',
         body: uploadFormData,
       })
 
