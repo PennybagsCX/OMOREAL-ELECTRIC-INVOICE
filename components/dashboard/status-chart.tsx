@@ -44,11 +44,11 @@ export function InvoiceStatusChart({ breakdown }: InvoiceStatusChartProps) {
             </div>
           </div>
         ) : (
-          <div className="w-full">
-            <PieChart width={400} height={300} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+          <div className="flex items-center justify-center w-full py-4">
+            <PieChart width={350} height={300} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <Pie
                 data={chartData}
-                cx={200}
+                cx={175}
                 cy={130}
                 labelLine={false}
                 label={({ name, percent }: any) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
