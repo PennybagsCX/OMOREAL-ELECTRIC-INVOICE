@@ -28,41 +28,23 @@ export async function signUp(formData: FormData) {
 }
 
 export async function signIn(formData: FormData) {
-  // Debug logging for Vercel troubleshooting
-  console.log('SIGNIN: Environment check', {
-    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  })
-
   const supabase = await createClient()
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
-    if (error) {
-      console.error('SIGNIN: Supabase auth error', {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-      })
-      // Redirect back to login with error message
-      redirect(`/login?error=${encodeURIComponent(error.message)}`)
-    }
-
-    console.log('SIGNIN: Success for email:', email)
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
-  } catch (fetchError) {
-    console.error('SIGNIN: Network/fetch error', fetchError)
-    redirect(`/login?error=${encodeURIComponent('Network error connecting to authentication service')}`)
+  if (error) {
+    // Redirect back to login with error message
+    redirect(`/login?error=${encodeURIComponent(error.message)}`)
   }
+
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
 }
 
 export async function signOut() {
