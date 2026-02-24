@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { Star, Search, Clock } from 'lucide-react'
+import { Star, Search, Clock, ChevronDown } from 'lucide-react'
 import { getSavedLineItems, trackSavedLineItemUsage } from '@/actions/saved-line-items'
 
 export interface SavedLineItemData {
@@ -104,8 +104,8 @@ export function SavedLineItemsPicker({ onSelect, excludeIds = [] }: SavedLineIte
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Collapsible open={open} onOpenChange={setOpen} className="w-full">
+      <CollapsibleTrigger asChild>
         <Button
           type="button"
           variant="outline"
@@ -113,13 +113,11 @@ export function SavedLineItemsPicker({ onSelect, excludeIds = [] }: SavedLineIte
         >
           <Star className="mr-2 h-4 w-4 shrink-0" />
           <span className="truncate">{search || 'Search templates'}</span>
+          <ChevronDown className={`ml-auto h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="w-full max-w-md p-0 max-h-[70vh]">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle>Select Line Item Template</DialogTitle>
-        </DialogHeader>
-        <div className="p-4 pt-2">
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2">
+        <div className="rounded-md border bg-background p-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
@@ -129,47 +127,47 @@ export function SavedLineItemsPicker({ onSelect, excludeIds = [] }: SavedLineIte
               className="pl-8 pr-4"
             />
           </div>
-        </div>
-        <ScrollArea className="h-64 px-4">
-          {!search && recentItems.length > 0 && (
-            <>
-              <div className="py-2 text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Recently Used
+          <ScrollArea className="h-64 px-1">
+            {!search && recentItems.length > 0 && (
+              <>
+                <div className="py-2 text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Recently Used
+                </div>
+                {recentItems.map((item) => (
+                  <SavedLineItemRow
+                    key={item.id}
+                    item={item}
+                    onSelect={() => handleSelect(item)}
+                  />
+                ))}
+                <div className="my-2 border-t" />
+              </>
+            )}
+            <div className="py-2 text-xs font-semibold text-muted-foreground">
+              {search ? 'Search Results' : 'All Items'}
+            </div>
+            {loading ? (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                Loading...
               </div>
-              {recentItems.map((item) => (
+            ) : items.length === 0 ? (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                {search ? 'No items found' : 'No saved items yet'}
+              </div>
+            ) : (
+              items.map((item) => (
                 <SavedLineItemRow
                   key={item.id}
                   item={item}
                   onSelect={() => handleSelect(item)}
                 />
-              ))}
-              <div className="my-2 border-t" />
-            </>
-          )}
-          <div className="py-2 text-xs font-semibold text-muted-foreground">
-            {search ? 'Search Results' : 'All Items'}
-          </div>
-          {loading ? (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              Loading...
-            </div>
-          ) : items.length === 0 ? (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              {search ? 'No items found' : 'No saved items yet'}
-            </div>
-          ) : (
-            items.map((item) => (
-              <SavedLineItemRow
-                key={item.id}
-                item={item}
-                onSelect={() => handleSelect(item)}
-              />
-            ))
-          )}
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+              ))
+            )}
+          </ScrollArea>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 

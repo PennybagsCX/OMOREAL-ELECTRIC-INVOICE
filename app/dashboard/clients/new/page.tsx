@@ -21,8 +21,8 @@ export default function NewClientPage() {
               <Input id="name" name="name" required />
             </div>
             <div className="space-y-2 w-full overflow-x-hidden">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" />
+              <Label htmlFor="email">Email *</Label>
+              <Input id="email" name="email" type="email" required />
             </div>
             <div className="space-y-2 w-full overflow-x-hidden">
               <Label htmlFor="phone">Phone</Label>

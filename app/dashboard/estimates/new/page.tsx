@@ -7,23 +7,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
 import { getClients } from '@/actions/clients'
 import { createEstimate } from '@/actions/estimates'
 import { LineItemsEditor } from '@/components/estimates/line-items-editor'
 import { EstimateInvoiceTemplatePicker } from '@/components/shared/estimate-invoice-template-picker'
+import { ClientSearchInput } from '@/components/shared/client-search-input'
 import { toast } from '@/hooks/use-toast'
 
 interface Client {
   id: string
   name: string
+  email?: string | null
+  phone?: string | null
 }
 
 const DEFAULT_TAX_RATE = 13
@@ -36,38 +32,23 @@ export default function NewEstimatePage() {
   const [validUntil, setValidUntil] = useState<Date | undefined>()
   const [notes, setNotes] = useState('')
   const [selectedClientId, setSelectedClientId] = useState<string>('')
-  const [isInitialized, setIsInitialized] = useState(false)
-  const autoSelectCompletedRef = useRef(false)
-  const autoSelectTimestampRef = useRef(0)
+  const [preselectedClientId, setPreselectedClientId] = useState<string | undefined>(undefined)
+  const [newClientData, setNewClientData] = useState<{ name: string; email: string; phone: string } | null>(null)
 
   useEffect(() => {
-    // Prevent multiple executions
-    if (isInitialized) {
-      return
-    }
-
     // Get client_id from URL
     const urlParams = new URLSearchParams(window.location.search)
-    const preselectedClientId = urlParams.get('client_id')
+    const clientId = urlParams.get('client_id')
+    if (clientId) {
+      setPreselectedClientId(clientId)
+      setSelectedClientId(clientId)
+    }
 
     // Load clients
     getClients().then((clientList) => {
       setClients(clientList)
-      // Set preselected client from URL param if valid
-      if (preselectedClientId && clientList.some((c: Client) => c.id === preselectedClientId)) {
-        autoSelectCompletedRef.current = true
-        autoSelectTimestampRef.current = Date.now()
-        setSelectedClientId(preselectedClientId)
-        // Mark as initialized after a short delay to allow Select to stabilize
-        setTimeout(() => {
-          setIsInitialized(true)
-          autoSelectCompletedRef.current = false
-        }, 100)
-      } else {
-        setIsInitialized(true)
-      }
     }).catch(console.error)
-  }, [isInitialized])
+  }, [])
 
   // Handle template selection
   const handleSelectTemplate = (template: any) => {
@@ -87,8 +68,16 @@ export default function NewEstimatePage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!selectedClientId) {
-      toast({ title: 'Error', description: 'Please select a client', variant: 'destructive' })
+
+    // Validation: check line items
+    if (!lineItems || lineItems.length === 0) {
+      toast({ title: 'Error', description: 'Please add at least one line item', variant: 'destructive' })
+      return
+    }
+
+    // Validation: either select existing client OR provide new client data
+    if (!selectedClientId && !newClientData) {
+      toast({ title: 'Error', description: 'Please select an existing client or create a new one', variant: 'destructive' })
       return
     }
     if (!validUntil) {
@@ -99,19 +88,38 @@ export default function NewEstimatePage() {
     setLoading(true)
     try {
       const formData = new FormData()
-      formData.append('client_id', selectedClientId)
+      // Only include client_id if we're selecting an existing client
+      if (selectedClientId) {
+        formData.append('client_id', selectedClientId)
+      }
+      // Include new client fields if provided
+      if (newClientData) {
+        formData.append('client_name', newClientData.name)
+        formData.append('client_email', newClientData.email)
+        formData.append('client_phone', newClientData.phone)
+      }
       formData.append('valid_until', validUntil.toISOString().split('T')[0])
       formData.append('notes', notes || '')
       formData.append('lineItems', JSON.stringify(lineItems))
 
-      await createEstimate(formData)
+      const estimate = await createEstimate(formData)
       toast({ title: 'Success', description: 'Estimate created!' })
-      router.push('/dashboard/estimates')
+      router.push(`/dashboard/estimates/${estimate.id}`)
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleClientSelect = (clientId: string) => {
+    setSelectedClientId(clientId)
+    setNewClientData(null)
+  }
+
+  const handleNewClientData = (data: { name: string; email: string; phone: string }) => {
+    setNewClientData(data)
+    setSelectedClientId('')
   }
 
   // Calculate totals with per-line-item tax
@@ -152,47 +160,6 @@ export default function NewEstimatePage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="client_id">Client *</Label>
-                <Select
-                  value={selectedClientId}
-                  onValueChange={(value) => {
-                    const timeSinceAutoSelect = Date.now() - autoSelectTimestampRef.current
-                    const justCompletedAutoSelect = autoSelectCompletedRef.current && timeSinceAutoSelect < 100
-
-                    // Block if: not initialized OR (just completed auto-select AND value is empty)
-                    if (!isInitialized || (justCompletedAutoSelect && value === '')) {
-                      return
-                    }
-
-                    setSelectedClientId(value)
-                  }}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Valid Until *</Label>
-                <DatePicker
-                  value={validUntil}
-                  onChange={setValidUntil}
-                  placeholder="Select a date"
-                  required
-                />
-              </div>
-            </div>
-
             {/* Quick Start - Load from Template */}
             <div className="border rounded-lg p-4 bg-muted/30">
               <Label className="text-base font-semibold">Quick Start</Label>
@@ -200,6 +167,24 @@ export default function NewEstimatePage() {
               <EstimateInvoiceTemplatePicker
                 templateType="estimate"
                 onSelect={handleSelectTemplate}
+              />
+            </div>
+
+            {/* Client Selection */}
+            <ClientSearchInput
+              clients={clients}
+              preselectedClientId={preselectedClientId}
+              onClientSelect={handleClientSelect}
+              onNewClientData={handleNewClientData}
+            />
+
+            <div className="space-y-2">
+              <Label>Valid Until *</Label>
+              <DatePicker
+                value={validUntil}
+                onChange={setValidUntil}
+                placeholder="Select a date"
+                required
               />
             </div>
 

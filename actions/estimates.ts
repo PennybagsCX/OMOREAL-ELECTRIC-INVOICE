@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { convertEstimateToInvoice } from '@/actions/invoices'
 import { calculateTaxFromLineItems } from '@/lib/tax-calculator'
+import { createClientInline } from '@/actions/clients'
 
 export async function getEstimates() {
   const supabase = await createClient()
@@ -56,9 +57,49 @@ export async function getClientEstimates(clientId: string) {
 export async function createEstimate(formData: FormData) {
   const supabase = await createClient()
 
+  // Get authenticated user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   // Get line items from form data
   const lineItemsData = formData.get('lineItems') as string
-  const lineItems = JSON.parse(lineItemsData)
+
+  if (!lineItemsData) {
+    throw new Error('Line items data is missing')
+  }
+
+  let lineItems: any[]
+  try {
+    lineItems = JSON.parse(lineItemsData)
+  } catch (e) {
+    throw new Error('Invalid line items data format')
+  }
+
+  if (!Array.isArray(lineItems)) {
+    throw new Error('Line items must be an array')
+  }
+
+  // Determine client ID - either from new client creation or existing selection
+  let clientId = formData.get('client_id') as string | null
+  const newClientName = formData.get('client_name') as string | null
+
+  // If new client name is provided, create the client first
+  if (newClientName && newClientName.trim() !== '') {
+    const clientEmail = formData.get('client_email') as string | null
+    if (!clientEmail || !clientEmail.trim()) {
+      throw new Error('Email is required when creating a new client')
+    }
+    clientId = await createClientInline({
+      name: newClientName.trim(),
+      email: clientEmail.trim(),
+      phone: formData.get('client_phone') as string | null || undefined,
+    })
+  }
+
+  // Validate that we have a client ID
+  if (!clientId || clientId.trim() === '') {
+    throw new Error('Please select an existing client or enter a new client name')
+  }
 
   // Generate estimate number
   const { data: numberData } = await supabase
@@ -73,7 +114,8 @@ export async function createEstimate(formData: FormData) {
   const { data: estimate, error } = await supabase
     .from('estimates')
     .insert({
-      client_id: formData.get('client_id'),
+      team_id: user.id,
+      client_id: clientId,
       estimate_number: estimateNumber,
       status: 'draft',
       valid_until: formData.get('valid_until'),

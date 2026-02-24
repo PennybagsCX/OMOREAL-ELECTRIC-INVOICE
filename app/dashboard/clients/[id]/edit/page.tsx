@@ -54,12 +54,13 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
               />
             </div>
             <div className="space-y-2 w-full overflow-x-hidden">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
                 defaultValue={client.email || ''}
+                required
               />
             </div>
             <div className="space-y-2 w-full overflow-x-hidden">

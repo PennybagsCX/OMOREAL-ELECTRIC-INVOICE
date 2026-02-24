@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { calculateTaxFromLineItems } from '@/lib/tax-calculator'
+import { createClientInline } from '@/actions/clients'
 
 export async function getInvoices() {
   const supabase = await createClient()
@@ -54,8 +55,34 @@ export async function getClientInvoices(clientId: string) {
 export async function createInvoice(formData: FormData) {
   const supabase = await createClient()
 
+  // Get authenticated user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const lineItemsData = formData.get('lineItems') as string
   const lineItems = JSON.parse(lineItemsData)
+
+  // Determine client ID - either from new client creation or existing selection
+  let clientId = formData.get('client_id') as string | null
+  const newClientName = formData.get('client_name') as string | null
+
+  // If new client name is provided, create the client first
+  if (newClientName && newClientName.trim() !== '') {
+    const clientEmail = formData.get('client_email') as string | null
+    if (!clientEmail || !clientEmail.trim()) {
+      throw new Error('Email is required when creating a new client')
+    }
+    clientId = await createClientInline({
+      name: newClientName.trim(),
+      email: clientEmail.trim(),
+      phone: formData.get('client_phone') as string | null || undefined,
+    })
+  }
+
+  // Validate that we have a client ID
+  if (!clientId) {
+    throw new Error('Please select an existing client or enter a new client name')
+  }
 
   // Generate invoice number
   const { data: numberData } = await supabase
@@ -75,7 +102,8 @@ export async function createInvoice(formData: FormData) {
   const { data: invoice, error } = await supabase
     .from('invoices')
     .insert({
-      client_id: formData.get('client_id'),
+      team_id: user.id,
+      client_id: clientId,
       invoice_number: invoiceNumber,
       status: 'draft',
       issue_date: issueDate.toISOString().split('T')[0],

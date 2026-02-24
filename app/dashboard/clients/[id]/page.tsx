@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Mail, Phone, MapPin, FileText, File } from 'lucide-react'
 import Link from 'next/link'
+import { DeleteButton } from './delete-button'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -207,6 +208,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <Button asChild variant="secondary" className="w-full sm:w-auto">
               <Link href="/dashboard/clients">Back to Clients</Link>
             </Button>
+            <DeleteButton clientId={id} />
           </div>
         </CardContent>
       </Card>

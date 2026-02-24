@@ -2,21 +2,15 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { LineItemsEditor } from '@/components/invoices/line-items-editor'
 import { EstimateInvoiceTemplatePicker } from '@/components/shared/estimate-invoice-template-picker'
+import { ClientSearchInput } from '@/components/shared/client-search-input'
 import { createInvoice } from '@/actions/invoices'
 import { toast } from '@/hooks/use-toast'
 
@@ -24,6 +18,7 @@ interface Client {
   id: string
   name: string
   email: string | null
+  phone?: string | null
 }
 
 interface NewInvoiceFormProps {
@@ -36,42 +31,17 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   const [lineItems, setLineItems] = useState<any[]>([])
   const [notes, setNotes] = useState('')
   const [dueDate, setDueDate] = useState('')
-  const [selectedClientId, setSelectedClientId] = useState<string>('')
-  const [isInitialized, setIsInitialized] = useState(false)
-  const autoSelectCompletedRef = useRef(false)
-  const autoSelectTimestampRef = useRef(0)
+  const [selectedClientId, setSelectedClientId] = useState<string>(preselectedClientId || '')
+  const [newClientData, setNewClientData] = useState<{ name: string; email: string; phone: string } | null>(null)
 
   const DEFAULT_TAX_RATE = 13
 
-  // Set preselected client from prop - run on mount and when clients/preselectedClientId changes
+  // Update selected client when preselectedClientId changes
   useEffect(() => {
-    // Prevent multiple executions
-    if (isInitialized) {
-      return
+    if (preselectedClientId) {
+      setSelectedClientId(preselectedClientId)
     }
-
-    // Only auto-select if we have both a preselected ID AND clients loaded
-    if (preselectedClientId && clients && clients.length > 0) {
-      // Check if the client exists in the list
-      const clientExists = clients.some(c => c.id === preselectedClientId)
-      if (clientExists) {
-        autoSelectCompletedRef.current = true
-        autoSelectTimestampRef.current = Date.now()
-        setSelectedClientId(preselectedClientId)
-        // Mark as initialized after a short delay to allow Select to stabilize
-        setTimeout(() => {
-          setIsInitialized(true)
-          autoSelectCompletedRef.current = false
-        }, 100)
-      } else {
-        setIsInitialized(true)
-      }
-    } else {
-      if (clients && clients.length > 0) {
-        setIsInitialized(true)
-      }
-    }
-  }, [preselectedClientId, clients, isInitialized])
+  }, [preselectedClientId])
 
   // Handle template selection
   const handleSelectTemplate = (template: any) => {
@@ -90,8 +60,9 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
   }
 
   async function handleSubmit(formData: FormData) {
-    if (!selectedClientId) {
-      toast({ title: 'Error', description: 'Please select a client', variant: 'destructive' })
+    // Validation: either select existing client OR provide new client data
+    if (!selectedClientId && !newClientData) {
+      toast({ title: 'Error', description: 'Please select an existing client or create a new one', variant: 'destructive' })
       return
     }
 
@@ -100,8 +71,16 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
       return
     }
 
-    // Set client_id from state
-    formData.set('client_id', selectedClientId)
+    // Only include client_id if we're selecting an existing client
+    if (selectedClientId) {
+      formData.set('client_id', selectedClientId)
+    }
+    // Include new client fields if provided
+    if (newClientData) {
+      formData.set('client_name', newClientData.name)
+      formData.set('client_email', newClientData.email)
+      formData.set('client_phone', newClientData.phone)
+    }
     // Set notes from state
     if (notes) {
       formData.set('notes', notes)
@@ -114,12 +93,22 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
     formData.append('lineItems', JSON.stringify(lineItems))
 
     try {
-      await createInvoice(formData)
+      const invoice = await createInvoice(formData)
       toast({ title: 'Success', description: 'Invoice created!' })
-      router.push('/dashboard/invoices')
+      router.push(`/dashboard/invoices/${invoice.id}`)
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
     }
+  }
+
+  const handleClientSelect = (clientId: string) => {
+    setSelectedClientId(clientId)
+    setNewClientData(null)
+  }
+
+  const handleNewClientData = (data: { name: string; email: string; phone: string }) => {
+    setNewClientData(data)
+    setSelectedClientId('')
   }
 
   // Calculate totals with per-line-item tax
@@ -160,41 +149,23 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
         </CardHeader>
         <CardContent>
           <form action={handleSubmit} className="space-y-6">
-            {/* Client Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="client">Client *</Label>
-              <Select
-                value={selectedClientId}
-                onValueChange={(value) => {
-                  const timeSinceAutoSelect = Date.now() - autoSelectTimestampRef.current
-                  const justCompletedAutoSelect = autoSelectCompletedRef.current && timeSinceAutoSelect < 100
-
-                  // Block if: not initialized OR (just completed auto-select AND value is empty)
-                  if (!isInitialized || (justCompletedAutoSelect && value === '')) {
-                    return
-                  }
-
-                  setSelectedClientId(value)
-                }}
-                required
-              >
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients?.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {clients?.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No clients found. <Link href="/dashboard/clients/new" className="text-primary hover:underline">Create one first</Link>.
-                </p>
-              )}
+            {/* Quick Start - Load from Template */}
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <Label className="text-base font-semibold">Quick Start</Label>
+              <p className="text-sm text-muted-foreground mb-3">Load a template to pre-fill this invoice</p>
+              <EstimateInvoiceTemplatePicker
+                templateType="invoice"
+                onSelect={handleSelectTemplate}
+              />
             </div>
+
+            {/* Client Selection */}
+            <ClientSearchInput
+              clients={clients}
+              preselectedClientId={preselectedClientId}
+              onClientSelect={handleClientSelect}
+              onNewClientData={handleNewClientData}
+            />
 
             {/* Due Date */}
             <div className="space-y-2">
@@ -208,16 +179,6 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
                 onChange={(e) => setDueDate(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">Default is 30 days from today</p>
-            </div>
-
-            {/* Quick Start - Load from Template */}
-            <div className="border rounded-lg p-4 bg-muted/30">
-              <Label className="text-base font-semibold">Quick Start</Label>
-              <p className="text-sm text-muted-foreground mb-3">Load a template to pre-fill this invoice</p>
-              <EstimateInvoiceTemplatePicker
-                templateType="invoice"
-                onSelect={handleSelectTemplate}
-              />
             </div>
 
             {/* Line Items */}
@@ -293,7 +254,7 @@ export default function NewInvoiceForm({ clients, preselectedClientId }: NewInvo
             </Card>
 
             <div className="flex gap-4">
-              <Button type="submit" disabled={clients?.length === 0}>
+              <Button type="submit">
                 Create Invoice
               </Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>
