@@ -31,7 +31,21 @@ export async function getClients() {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data
+
+  // Deduplicate clients by email (preferred) or name
+  // Keep the most recent entry (first due to descending created_at order)
+  const seen = new Set<string>()
+  const deduplicated = data?.filter(client => {
+    // Use email as the unique key if available
+    const key = client.email?.toLowerCase().trim() || client.name.toLowerCase().trim()
+    if (seen.has(key)) {
+      return false // Skip duplicate
+    }
+    seen.add(key)
+    return true
+  }) || []
+
+  return deduplicated
 }
 
 export async function getClient(id: string) {
